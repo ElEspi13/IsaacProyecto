@@ -350,7 +350,7 @@ public class GeneradorMazmorra : MonoBehaviour
                 // Si encontramos un prefab adecuado, lo instanciamos
                 if (roomPrefab != null)
                 {
-                    GameObject roomObject = Instantiate(roomPrefab, new Vector3(room.x * 24, room.y * 11, 0), Quaternion.identity);
+                    GameObject roomObject = Instantiate(roomPrefab, new Vector3(room.x * 25, room.y * 11, 0), Quaternion.identity);
                     instantiatedRooms[position] = roomObject;
                 }
                 else
