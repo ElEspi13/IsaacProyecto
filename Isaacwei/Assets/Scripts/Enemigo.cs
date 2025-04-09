@@ -28,6 +28,14 @@ public class Enemigo : MonoBehaviour
         agente.speed = velocidad;
         agente.updateRotation = false; // No girar automáticamente
         agente.updateUpAxis = false; // Mantener eje Z fijo (para 2D)
+        if (DungeonManager.Instance != null && DungeonManager.Instance.Player != null)
+        {
+            jugador = DungeonManager.Instance.Player;
+        }
+        else
+        {
+            Debug.LogError("❌ No se encontró el jugador en el DungeonManager.");
+        }
     }
 
     void Update()

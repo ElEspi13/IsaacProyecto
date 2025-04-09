@@ -78,11 +78,17 @@ public class GeneradorMazmorra : MonoBehaviour
 
     // Prefabs de las salas cargados desde Resources/Salas
     private GameObject[] salasPrefabs;
+    private GameObject[] bossRoomPrefab;
+    private GameObject[] treasureRoomPrefab;
+    private GameObject[] salaInicialPrefabs;
 
     void Start()
     {
-        // Cargar los prefabs de las salas desde la carpeta Resources/Salas
-        salasPrefabs = Resources.LoadAll<GameObject>("Salas");
+        // Cargar los prefabs de las salas desde las carpetas organizadas
+        salasPrefabs = Resources.LoadAll<GameObject>("Salas/Normales");
+        bossRoomPrefab = Resources.LoadAll<GameObject>("Salas/Jefe");
+        treasureRoomPrefab = Resources.LoadAll<GameObject>("Salas/Tesoro");
+        salaInicialPrefabs = Resources.LoadAll<GameObject>("Salas/Vacias");
 
         if (salasPrefabs.Length == 0)
         {
@@ -91,10 +97,10 @@ public class GeneradorMazmorra : MonoBehaviour
         }
 
         // Encontrar el objeto 'navmesh' en la escena y obtener el componente NavMeshSurface
-        GameObject navMeshObject = GameObject.Find("Navmesh"); // Busca el objeto llamado "navmesh"
+        GameObject navMeshObject = GameObject.Find("Navmesh");
         if (navMeshObject != null)
         {
-            navMeshSurface = navMeshObject.GetComponent<NavMeshSurface>(); // Obtén el componente NavMeshSurface
+            navMeshSurface = navMeshObject.GetComponent<NavMeshSurface>();
             if (navMeshSurface == null)
             {
                 Debug.LogError("❌ El objeto 'navmesh' no tiene el componente NavMeshSurface.");
@@ -107,13 +113,65 @@ public class GeneradorMazmorra : MonoBehaviour
             return;
         }
 
-        // Generar la mazmora
-        GenerateDungeonLayout();
-        ConnectAdjacentRooms();
-        EnsureSingleEntranceRooms(2);
-        GenerateDungeonRooms();
-        AddSpecialRooms();
-        navMeshSurface.BuildNavMesh();
+        // Intentar generar la mazmorra hasta que se complete sin errores
+        bool dungeonGenerated = false;
+        while (!dungeonGenerated)
+        {
+            try
+            {
+                // Generar la mazmorra
+                GenerateDungeonLayout();
+                ConnectAdjacentRooms();
+                EnsureSingleEntranceRooms(2);
+                AddSpecialRooms();
+                GenerateDungeonRooms();
+
+                navMeshSurface.BuildNavMesh();
+
+                
+                
+
+                // Inicializar el DungeonRoomManager
+                GameObject jugador = GameObject.FindGameObjectWithTag("Player");
+                DungeonManager.Instance.Initialize(instantiatedRooms, jugador);
+
+                // Si todo va bien, marcar como generada
+                dungeonGenerated = true;
+                Debug.Log("✅ Mazmorra generada exitosamente.");
+                GenerarEnemigos();
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"❌ Error al generar la mazmorra: {ex.Message}");
+                ClearGeneratedDungeon();
+            }
+        }
+    }
+
+
+    private void GenerarEnemigos()
+    {
+        foreach (var room in instantiatedRooms.Values)
+        {
+            // Buscar todos los puntos de spawn en la sala
+            foreach (var spawnPoint in room.GetComponentsInChildren<SpawnEnemigos>())
+            {
+                // Generar un enemigo en cada punto de spawn
+                spawnPoint.SpawnEnemy();
+            }
+        }
+    }
+    private void ClearGeneratedDungeon()
+    {
+        // Destruir todas las salas instanciadas
+        foreach (var room in instantiatedRooms.Values)
+        {
+            Destroy(room);
+        }
+        instantiatedRooms.Clear();
+        _dungeonRooms.Clear();
+        _pendingRooms.Clear();
+        nCurrentRooms = 0;
     }
 
     private void GenerateDungeonLayout()
@@ -281,7 +339,7 @@ public class GeneradorMazmorra : MonoBehaviour
         // Verificamos si los prefabs están cargados correctamente
         if (salasPrefabs.Length == 0)
         {
-            Debug.LogError("❌ No se encontraron salas en la carpeta Resources/Salas.");
+            Debug.LogError("❌ No se encontraron salas en la carpeta Resources/Salas/Normales.");
             return;
         }
 
@@ -293,57 +351,27 @@ public class GeneradorMazmorra : MonoBehaviour
             // Verificar que no haya ninguna sala instanciada en esa posición
             if (!instantiatedRooms.ContainsKey(position))
             {
-                // Revisamos las direcciones de los vecinos para saber qué puertas necesitamos
-                bool tienePuertaArriba = false;
-                bool tienePuertaAbajo = false;
-                bool tienePuertaIzquierda = false;
-                bool tienePuertaDerecha = false;
-
-                // Recorremos los vecinos de la sala y marcamos las puertas necesarias
-                foreach (var neighbour in room.neighbours)
-                {
-                    switch (neighbour)
-                    {
-                        case ROOM_DIRECTIONS.Up:
-                            tienePuertaArriba = true;
-                            break;
-                        case ROOM_DIRECTIONS.Down:
-                            tienePuertaAbajo = true;
-                            break;
-                        case ROOM_DIRECTIONS.Left:
-                            tienePuertaIzquierda = true;
-                            break;
-                        case ROOM_DIRECTIONS.Right:
-                            tienePuertaDerecha = true;
-                            break;
-                    }
-                }
-
-                // Agregamos un log para ver qué puertas estamos buscando
-                Debug.Log($"Buscando prefab para sala en ({room.x}, {room.y}) con puertas: Arriba={tienePuertaArriba}, Abajo={tienePuertaAbajo}, Izquierda={tienePuertaIzquierda}, Derecha={tienePuertaDerecha}");
-
-                // Buscar el prefab adecuado que tenga las puertas correspondientes
                 GameObject roomPrefab = null;
 
-                // Recorremos todos los prefabs para encontrar el adecuado
-                foreach (var prefab in salasPrefabs)
+                // Seleccionar el prefab adecuado según el tipo de sala
+                if (position == new Vector2Int(0, 0))
                 {
-                    Sala salaScript = prefab.GetComponent<Sala>();
-
-                    if (salaScript != null)
+                    // Utilizar una sala vacía para la sala inicial
+                    roomPrefab = GetInitialRoomPrefab(room);
+                }
+                else
+                {
+                    switch (room.Type)
                     {
-                        // Agregamos un log para mostrar las puertas del prefab que estamos comprobando
-                        Debug.Log($"Comprobando prefab {prefab.name}: Arriba={salaScript.TienePuertaArriba}, Abajo={salaScript.TienePuertaAbajo}, Izquierda={salaScript.TienePuertaIzquierda}, Derecha={salaScript.TienePuertaDerecha}");
-
-                        // Comprobamos si el prefab tiene las puertas necesarias
-                        if (salaScript.TienePuertaArriba == tienePuertaArriba &&
-                            salaScript.TienePuertaAbajo == tienePuertaAbajo &&
-                            salaScript.TienePuertaIzquierda == tienePuertaIzquierda &&
-                            salaScript.TienePuertaDerecha == tienePuertaDerecha)
-                        {
-                            roomPrefab = prefab;
-                            break; // Si encontramos el prefab adecuado, salimos del bucle
-                        }
+                        case DungeonType.Boss:
+                            roomPrefab = GetBossRoomPrefab(room);
+                            break;
+                        case DungeonType.Treasure:
+                            roomPrefab = GetTreasureRoomPrefab(room);
+                            break;
+                        default:
+                            roomPrefab = GetRegularRoomPrefab(room);
+                            break;
                     }
                 }
 
@@ -359,6 +387,58 @@ public class GeneradorMazmorra : MonoBehaviour
                 }
             }
         }
+    }
+    private GameObject GetInitialRoomPrefab(DungeonRoom room)
+    {
+        // Revisamos las direcciones de los vecinos para saber qué puertas necesitamos
+        bool tienePuertaArriba = false;
+        bool tienePuertaAbajo = false;
+        bool tienePuertaIzquierda = false;
+        bool tienePuertaDerecha = false;
+
+        // Recorremos los vecinos de la sala y marcamos las puertas necesarias
+        foreach (var neighbour in room.neighbours)
+        {
+            switch (neighbour)
+            {
+                case ROOM_DIRECTIONS.Up:
+                    tienePuertaArriba = true;
+                    break;
+                case ROOM_DIRECTIONS.Down:
+                    tienePuertaAbajo = true;
+                    break;
+                case ROOM_DIRECTIONS.Left:
+                    tienePuertaIzquierda = true;
+                    break;
+                case ROOM_DIRECTIONS.Right:
+                    tienePuertaDerecha = true;
+                    break;
+            }
+        }
+
+        // Buscar todos los prefabs que tengan las puertas correspondientes
+        List<GameObject> matchingPrefabs = new List<GameObject>();
+        foreach (var prefab in salaInicialPrefabs)
+        {
+            Sala salaScript = prefab.GetComponent<Sala>();
+
+            if (salaScript != null &&
+                salaScript.TienePuertaArriba == tienePuertaArriba &&
+                salaScript.TienePuertaAbajo == tienePuertaAbajo &&
+                salaScript.TienePuertaIzquierda == tienePuertaIzquierda &&
+                salaScript.TienePuertaDerecha == tienePuertaDerecha)
+            {
+                matchingPrefabs.Add(prefab);
+            }
+        }
+
+        // Seleccionar un prefab aleatorio de los que cumplen con los requisitos
+        if (matchingPrefabs.Count > 0)
+        {
+            return matchingPrefabs[Random.Range(0, matchingPrefabs.Count)];
+        }
+
+        return null;
     }
 
     private void AddSpecialRooms()
@@ -386,7 +466,7 @@ public class GeneradorMazmorra : MonoBehaviour
         if (bossRoom == null || treasureRoom == null)
         {
             Debug.LogError("❌ ERROR: No se pudieron asignar correctamente las salas especiales.");
-            return;
+            throw new System.Exception("No se pudieron asignar correctamente las salas especiales.");
         }
 
         Debug.Log($"💀 Sala del jefe en ({bossRoom.x}, {bossRoom.y})");
@@ -495,6 +575,163 @@ public class GeneradorMazmorra : MonoBehaviour
         }
         return new Vector2Int(room.x, room.y);
     }
+    private GameObject GetRegularRoomPrefab(DungeonRoom room)
+    {
+        // Revisamos las direcciones de los vecinos para saber qué puertas necesitamos
+        bool tienePuertaArriba = false;
+        bool tienePuertaAbajo = false;
+        bool tienePuertaIzquierda = false;
+        bool tienePuertaDerecha = false;
 
+        // Recorremos los vecinos de la sala y marcamos las puertas necesarias
+        foreach (var neighbour in room.neighbours)
+        {
+            switch (neighbour)
+            {
+                case ROOM_DIRECTIONS.Up:
+                    tienePuertaArriba = true;
+                    break;
+                case ROOM_DIRECTIONS.Down:
+                    tienePuertaAbajo = true;
+                    break;
+                case ROOM_DIRECTIONS.Left:
+                    tienePuertaIzquierda = true;
+                    break;
+                case ROOM_DIRECTIONS.Right:
+                    tienePuertaDerecha = true;
+                    break;
+            }
+        }
+
+        // Buscar todos los prefabs que tengan las puertas correspondientes
+        List<GameObject> matchingPrefabs = new List<GameObject>();
+        foreach (var prefab in salasPrefabs)
+        {
+            Sala salaScript = prefab.GetComponent<Sala>();
+
+            if (salaScript != null &&
+                salaScript.TienePuertaArriba == tienePuertaArriba &&
+                salaScript.TienePuertaAbajo == tienePuertaAbajo &&
+                salaScript.TienePuertaIzquierda == tienePuertaIzquierda &&
+                salaScript.TienePuertaDerecha == tienePuertaDerecha)
+            {
+                matchingPrefabs.Add(prefab);
+            }
+        }
+
+        // Seleccionar un prefab aleatorio de los que cumplen con los requisitos
+        if (matchingPrefabs.Count > 0)
+        {
+            return matchingPrefabs[Random.Range(0, matchingPrefabs.Count)];
+        }
+
+        return null;
+    }
+
+    private GameObject GetBossRoomPrefab(DungeonRoom room)
+    {
+        // Revisamos las direcciones de los vecinos para saber qué puertas necesitamos
+        bool tienePuertaArriba = false;
+        bool tienePuertaAbajo = false;
+        bool tienePuertaIzquierda = false;
+        bool tienePuertaDerecha = false;
+
+        // Recorremos los vecinos de la sala y marcamos las puertas necesarias
+        foreach (var neighbour in room.neighbours)
+        {
+            switch (neighbour)
+            {
+                case ROOM_DIRECTIONS.Up:
+                    tienePuertaArriba = true;
+                    break;
+                case ROOM_DIRECTIONS.Down:
+                    tienePuertaAbajo = true;
+                    break;
+                case ROOM_DIRECTIONS.Left:
+                    tienePuertaIzquierda = true;
+                    break;
+                case ROOM_DIRECTIONS.Right:
+                    tienePuertaDerecha = true;
+                    break;
+            }
+        }
+
+        // Buscar todos los prefabs que tengan las puertas correspondientes
+        List<GameObject> matchingPrefabs = new List<GameObject>();
+        foreach (var prefab in bossRoomPrefab)
+        {
+            Sala salaScript = prefab.GetComponent<Sala>();
+
+            if (salaScript != null &&
+                salaScript.TienePuertaArriba == tienePuertaArriba &&
+                salaScript.TienePuertaAbajo == tienePuertaAbajo &&
+                salaScript.TienePuertaIzquierda == tienePuertaIzquierda &&
+                salaScript.TienePuertaDerecha == tienePuertaDerecha)
+            {
+                matchingPrefabs.Add(prefab);
+            }
+        }
+
+        // Seleccionar un prefab aleatorio de los que cumplen con los requisitos
+        if (matchingPrefabs.Count > 0)
+        {
+            return matchingPrefabs[Random.Range(0, matchingPrefabs.Count)];
+        }
+
+        return null;
+    }
+
+    private GameObject GetTreasureRoomPrefab(DungeonRoom room)
+    {
+        // Revisamos las direcciones de los vecinos para saber qué puertas necesitamos
+        bool tienePuertaArriba = false;
+        bool tienePuertaAbajo = false;
+        bool tienePuertaIzquierda = false;
+        bool tienePuertaDerecha = false;
+
+        // Recorremos los vecinos de la sala y marcamos las puertas necesarias
+        foreach (var neighbour in room.neighbours)
+        {
+            switch (neighbour)
+            {
+                case ROOM_DIRECTIONS.Up:
+                    tienePuertaArriba = true;
+                    break;
+                case ROOM_DIRECTIONS.Down:
+                    tienePuertaAbajo = true;
+                    break;
+                case ROOM_DIRECTIONS.Left:
+                    tienePuertaIzquierda = true;
+                    break;
+                case ROOM_DIRECTIONS.Right:
+                    tienePuertaDerecha = true;
+                    break;
+            }
+        }
+
+        // Buscar todos los prefabs que tengan las puertas correspondientes
+        List<GameObject> matchingPrefabs = new List<GameObject>();
+        foreach (var prefab in treasureRoomPrefab)
+        {
+            Sala salaScript = prefab.GetComponent<Sala>();
+
+            if (salaScript != null &&
+                salaScript.TienePuertaArriba == tienePuertaArriba &&
+                salaScript.TienePuertaAbajo == tienePuertaAbajo &&
+                salaScript.TienePuertaIzquierda == tienePuertaIzquierda &&
+                salaScript.TienePuertaDerecha == tienePuertaDerecha)
+            {
+                matchingPrefabs.Add(prefab);
+            }
+        }
+
+        // Seleccionar un prefab aleatorio de los que cumplen con los requisitos
+        if (matchingPrefabs.Count > 0)
+        {
+            return matchingPrefabs[Random.Range(0, matchingPrefabs.Count)];
+        }
+
+        return null;
+    }
 
 }
