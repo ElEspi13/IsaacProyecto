@@ -1,18 +1,18 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class NewMonoBehaviourScript : MonoBehaviour
 {
     public EstadisticasJugador estadisticas; // Referencia compartida
     public GameObject prefabDisparo;
     public GameObject puntoPartida;
-    private float tiempoUltimoDisparo=0f;
+    private float tiempoUltimoDisparo = 0f;
     public Animator animator;
 
     void Start()
     {
         animator = GetComponent<Animator>();
         if (estadisticas == null)
-            estadisticas = Object.FindAnyObjectByType<EstadisticasJugador>(); // Asigna autom�ticamente si no se ha hecho en el Inspector
+            estadisticas = Object.FindAnyObjectByType<EstadisticasJugador>(); // Autoasignar si está en escena
     }
 
     void Update()
@@ -32,6 +32,10 @@ public class NewMonoBehaviourScript : MonoBehaviour
                 if (puntoPartida != null && prefabDisparo != null)
                 {
                     GameObject disparo = Instantiate(prefabDisparo, puntoPartida.transform.position, Quaternion.identity);
+
+                    // 👇 Aplicar tamaño desde estadísticas
+                    disparo.transform.localScale = estadisticas.escalaProyectil;
+
                     ProyectilScript movimientoDisparo = disparo.GetComponent<ProyectilScript>();
 
                     if (movimientoDisparo != null)
@@ -39,17 +43,17 @@ public class NewMonoBehaviourScript : MonoBehaviour
                         movimientoDisparo.DireccionDisparo = direccionDisparo;
                         movimientoDisparo.velocidad = estadisticas.velocidadDisparo;
                         movimientoDisparo.distanciaMaxima = estadisticas.distanciaMaximaDisparo;
-                        // El da�o se asigna en el Start() de ProyectilScript usando estadisticas
                     }
                     else
                     {
                         Debug.LogError("El prefabDisparo no tiene el script ProyectilScript.");
                     }
+
                     tiempoUltimoDisparo = Time.time;
                 }
                 else
                 {
-                    Debug.LogError("PrefabDisparo o PuntoPartida no est�n asignados.");
+                    Debug.LogError("PrefabDisparo o PuntoPartida no están asignados.");
                 }
             }
         }

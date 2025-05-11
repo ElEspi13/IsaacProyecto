@@ -15,7 +15,7 @@ public class Door : MonoBehaviour
         RevisarPuerta();
 
         // Suscribirse al evento de limpieza de enemigos (si existe en DungeonManager)
-        DungeonManager.Instance.OnSalaLimpia += RevisarPuerta;
+        DungeonManager.Instance.OnSalaLimpia += AbrirPuerta;
     }
 
     private void OnDestroy()
@@ -23,7 +23,7 @@ public class Door : MonoBehaviour
         // Desuscribirse del evento al destruir el objeto
         if (DungeonManager.Instance != null)
         {
-            DungeonManager.Instance.OnSalaLimpia -= RevisarPuerta;
+            DungeonManager.Instance.OnSalaLimpia -= AbrirPuerta;
         }
     }
 
@@ -43,15 +43,35 @@ public class Door : MonoBehaviour
     {
         // Verificar si la sala actual está limpia de enemigos
         bool salaLimpia = DungeonManager.Instance.SalaActualLimpia();
+        Debug.Log($"pueltas:{triggerCollider.enabled}");
+        Debug.Log($"pueltas:{blockingCollider.enabled}");
+        if (salaLimpia)
+        {
+            triggerCollider.enabled = salaLimpia; // Activar el trigger si la sala está limpia
+            blockingCollider.enabled = !salaLimpia; // Bloquear la puerta si hay enemigos
+        }
+        else if (salaLimpia == false) // Si la sala no está limpia, bloquear la puerta
+        {
+            triggerCollider.enabled = salaLimpia; // Activar el trigger si la sala está limpia
+            blockingCollider.enabled = !salaLimpia; // Bloquear la puerta si hay enemigos
+        }
 
-        // Configurar los colliders según el estado de la sala
-        triggerCollider.enabled = salaLimpia; // Activar el trigger si la sala está limpia
-        blockingCollider.enabled = !salaLimpia; // Bloquear la puerta si hay enemigos
+            
 
+        
         // Cambiar el sprite de la puerta para reflejar su estado (opcional)
         if (puertaSprite != null)
         {
             puertaSprite.color = salaLimpia ? Color.white : Color.gray; // Blanco para abierta, gris para cerrada
         }
+        Debug.Log($"pueltas");
+    }
+    private void AbrirPuerta()
+    {
+        
+            triggerCollider.enabled = true; // Activar el trigger si la sala está limpia
+            blockingCollider.enabled = false; // Bloquear la puerta si hay enemigos
+        
+
     }
 }

@@ -65,7 +65,7 @@ GameObject:
   - component: {fileID: 6692861676381674097}
   m_Layer: 0
   m_Name: MuroAbajoIzquierda
-  m_TagString: Untagged
+  m_TagString: Muro
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -216,7 +216,7 @@ GameObject:
   - component: {fileID: 2163060532346313160}
   m_Layer: 0
   m_Name: MuroIzquierdaAbajo
-  m_TagString: Untagged
+  m_TagString: Muro
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -353,6 +353,52 @@ MonoBehaviour:
   m_Area: 1
   m_IgnoreFromBuild: 0
   m_AffectedAgents: ffffffff
+--- !u!1 &1541879276036365089
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4100247391325487609}
+  - component: {fileID: 8695235985717577000}
+  m_Layer: 0
+  m_Name: EnemigosSpawnPoints
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4100247391325487609
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1541879276036365089}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -0.39125, y: 0.19988492, z: 5.060811}
+  m_LocalScale: {x: 0.041666668, y: 0.1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4680546987253820334}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8695235985717577000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1541879276036365089}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0960821368020c84a88647051dc0b91a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enemyPrefab: {fileID: 3348884278315909420, guid: f6ee306fa8f2d0647ba27888e6ab6835, type: 3}
+  enemigosSpawnPoints: {fileID: 4100247391325487609}
 --- !u!1 &2032758362860172195
 GameObject:
   m_ObjectHideFlags: 0
@@ -368,7 +414,7 @@ GameObject:
   - component: {fileID: 7672135277910361401}
   m_Layer: 0
   m_Name: PuertaArriba
-  m_TagString: Untagged
+  m_TagString: Muro
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -565,7 +611,7 @@ GameObject:
   - component: {fileID: 2623972081752805050}
   m_Layer: 0
   m_Name: MuroDerechaAbajo
-  m_TagString: Untagged
+  m_TagString: Muro
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -717,7 +763,7 @@ GameObject:
   - component: {fileID: 5460353185549499325}
   m_Layer: 0
   m_Name: PuertaDerecha
-  m_TagString: Untagged
+  m_TagString: Muro
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -900,6 +946,52 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 1, y: 1}
   m_EdgeRadius: 0
+--- !u!1 &4695688916073343478
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5100348865203923262}
+  - component: {fileID: 4013470740809411718}
+  m_Layer: 0
+  m_Name: EnemigosSpawnPoints (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5100348865203923262
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4695688916073343478}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.36125, y: 0.19988492, z: 5.060811}
+  m_LocalScale: {x: 0.041666668, y: 0.1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4680546987253820334}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4013470740809411718
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4695688916073343478}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0960821368020c84a88647051dc0b91a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enemyPrefab: {fileID: 3348884278315909420, guid: 08f9155ddf1ae164590b85192c38ff9e, type: 3}
+  enemigosSpawnPoints: {fileID: 5100348865203923262}
 --- !u!1 &4787272252444064667
 GameObject:
   m_ObjectHideFlags: 0
@@ -914,7 +1006,7 @@ GameObject:
   - component: {fileID: 754440564971816023}
   m_Layer: 0
   m_Name: MuroArribaDerecho
-  m_TagString: Untagged
+  m_TagString: Muro
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1066,7 +1158,7 @@ GameObject:
   - component: {fileID: 3610784610491318451}
   m_Layer: 0
   m_Name: PuertaIzquierda
-  m_TagString: Untagged
+  m_TagString: Muro
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1263,7 +1355,7 @@ GameObject:
   - component: {fileID: 6883818510849223763}
   m_Layer: 0
   m_Name: MuroIzquierdaArriba
-  m_TagString: Untagged
+  m_TagString: Muro
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1430,7 +1522,9 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 24, y: 10, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 4100247391325487609}
+  - {fileID: 5100348865203923262}
   m_Father: {fileID: 3313409331538878547}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &8400076443597657434
@@ -1519,7 +1613,7 @@ GameObject:
   - component: {fileID: 89214795181015242}
   m_Layer: 0
   m_Name: PuertaAbajo
-  m_TagString: Untagged
+  m_TagString: Muro
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1755,7 +1849,7 @@ GameObject:
   - component: {fileID: 2563714644405206817}
   m_Layer: 0
   m_Name: MuroDerechaArriba
-  m_TagString: Untagged
+  m_TagString: Muro
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1941,7 +2035,7 @@ GameObject:
   - component: {fileID: 8462168068490294922}
   m_Layer: 0
   m_Name: MuroArribaIzquierdo
-  m_TagString: Untagged
+  m_TagString: Muro
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2092,7 +2186,7 @@ GameObject:
   - component: {fileID: 564136276931246221}
   m_Layer: 0
   m_Name: MuroAbajoDerecha
-  m_TagString: Untagged
+  m_TagString: Muro
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

@@ -33,14 +33,18 @@ public class ProyectilScript : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.CompareTag("Enemigo"))
+        // Verificar si el objeto tiene el componente EnemigoBase
+        EnemigoBase enemigo = other.GetComponent<EnemigoBase>();
+
+        // Si el objeto tiene el componente EnemigoBase (es un enemigo)
+        if (enemigo != null)
         {
-            Enemigo enemigo = other.GetComponent<Enemigo>();
-            if (enemigo != null)
-            {
-                enemigo.RecibirDaño(damage);
-            }
-            Destroy(gameObject);
+            enemigo.RecibirDano(damage); // Aplicar daño al enemigo
+            Destroy(gameObject); // Destruir el proyectil después de golpear
+        }
+        else if (other.CompareTag("Muro"))
+        {
+            Destroy(gameObject); // Destruir el proyectil al golpear un muro
         }
     }
 }

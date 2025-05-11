@@ -67,7 +67,7 @@ public enum ROOM_DIRECTIONS
 public class GeneradorMazmorra : MonoBehaviour
 {
     public int maxRooms = 20; // Máximo de salas a generar
-    public int minRooms = 6;
+    public int minRooms = 20;
     private List<DungeonRoom> _dungeonRooms;
     private Queue<DungeonRoom> _pendingRooms;
     private int nCurrentRooms;
@@ -84,6 +84,24 @@ public class GeneradorMazmorra : MonoBehaviour
 
     void Start()
     {
+        InicializarMazmorra();
+    }
+
+    public void ReiniciarMazmorra(){
+        ClearGeneratedDungeon();
+        try
+        {
+            InicializarMazmorra();
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"❌ Error al reiniciar la mazmora: {ex.Message}");
+        }
+
+    }
+
+    public void InicializarMazmorra() {
+
         // Cargar los prefabs de las salas desde las carpetas organizadas
         salasPrefabs = Resources.LoadAll<GameObject>("Salas/Normales");
         bossRoomPrefab = Resources.LoadAll<GameObject>("Salas/Jefe");
@@ -125,11 +143,12 @@ public class GeneradorMazmorra : MonoBehaviour
                 EnsureSingleEntranceRooms(2);
                 AddSpecialRooms();
                 GenerateDungeonRooms();
+                
 
                 navMeshSurface.BuildNavMesh();
 
-                
-                
+
+
 
                 // Inicializar el DungeonRoomManager
                 GameObject jugador = GameObject.FindGameObjectWithTag("Player");
@@ -139,6 +158,7 @@ public class GeneradorMazmorra : MonoBehaviour
                 dungeonGenerated = true;
                 Debug.Log("✅ Mazmorra generada exitosamente.");
                 GenerarEnemigos();
+                GenerarObjetos();
             }
             catch (System.Exception ex)
             {
@@ -148,8 +168,7 @@ public class GeneradorMazmorra : MonoBehaviour
         }
     }
 
-
-    private void GenerarEnemigos()
+    public void GenerarEnemigos()
     {
         foreach (var room in instantiatedRooms.Values)
         {
@@ -161,6 +180,19 @@ public class GeneradorMazmorra : MonoBehaviour
             }
         }
     }
+    public void GenerarObjetos()
+    {
+        foreach (var room in instantiatedRooms.Values)
+        {
+            // Buscar todos los puntos de spawn de objetos en la sala
+            foreach (var spawnPoint in room.GetComponentsInChildren<SpawnObjetos>())
+            {
+                // Generar un objeto en cada punto de spawn
+                spawnPoint.SpawnObject();
+            }
+        }
+    }
+
     private void ClearGeneratedDungeon()
     {
         // Destruir todas las salas instanciadas
@@ -172,6 +204,7 @@ public class GeneradorMazmorra : MonoBehaviour
         _dungeonRooms.Clear();
         _pendingRooms.Clear();
         nCurrentRooms = 0;
+        navMeshSurface.RemoveData();
     }
 
     private void GenerateDungeonLayout()

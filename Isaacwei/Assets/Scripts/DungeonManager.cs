@@ -1,19 +1,21 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class DungeonManager : MonoBehaviour
 {
     public static DungeonManager Instance; // Singleton para acceso global
-
-    public event Action OnSalaLimpia; // Evento que se dispara cuando una sala está limpia
+    public event Action OnSalaLimpia;
 
     private Dictionary<Vector2Int, GameObject> instantiatedRooms; // Referencia a las salas generadas
     private GameObject player; // Referencia al jugador
     public Transform Player { get; private set; }
-    private int enemigosRestantes; // Número de enemigos restantes en la sala actual
+    private int enemigosRestantes=0; // Número de enemigos restantes en la sala actual
     private Vector2Int salaActual; // Posición de la sala actual
 
+    public GameObject gameOverCanvas; // Canvas de Game Over
+    public GameObject victoryCanvas; // Canvas de Victoria
     private void Awake()
     {
         // Configurar el Singleton
@@ -32,9 +34,11 @@ public class DungeonManager : MonoBehaviour
         instantiatedRooms = rooms;
         player = playerObject;
         Player= playerObject.transform;
+
+        DesactivarTodasLasSalasMenosInicial();
     }
 
-    public void MoverJugadorADireccion(ROOM_DIRECTIONS direccion)
+    public void DesactivarTodasLasSalasMenosInicial()
     {
         if (instantiatedRooms == null || instantiatedRooms.Count == 0)
         {
@@ -42,58 +46,87 @@ public class DungeonManager : MonoBehaviour
             return;
         }
 
-        // Calcular la posición de la sala conectada
-        Vector2Int nuevaSala = salaActual + DireccionARelativa(direccion);
+        Vector2Int salaInicial = new Vector2Int(0, 0); // Posición de la sala inicial
 
-        if (instantiatedRooms.ContainsKey(nuevaSala))
+        foreach (var sala in instantiatedRooms)
         {
-            // Desactivar la sala actual
-            if (instantiatedRooms.ContainsKey(salaActual) && instantiatedRooms[salaActual] != null)
+            if (sala.Key == salaInicial)
             {
-                instantiatedRooms[salaActual].SetActive(false);
-                Debug.Log($"🔴 Sala desactivada: {salaActual}");
-            }
-
-            // Activar la sala conectada
-            GameObject salaConectada = instantiatedRooms[nuevaSala];
-            if (salaConectada != null)
-            {
-                salaConectada.SetActive(true);
-                Debug.Log($"🟢 Sala activada: {nuevaSala}");
-
-                // Mover al jugador frente a la puerta opuesta
-                if (player != null)
-                {
-                    Transform puertaOpuesta = ObtenerPuertaOpuesta(salaConectada, direccion);
-                    if (puertaOpuesta != null)
-                    {
-                        // Calcular la posición frente a la puerta opuesta
-                        Vector3 posicionFrentePuerta = CalcularPosicionFrentePuerta(puertaOpuesta, direccion);
-                        player.transform.position = posicionFrentePuerta;
-                        Debug.Log($"🚶 Jugador movido a: {posicionFrentePuerta}");
-                    }
-                    else
-                    {
-                        Debug.LogWarning("⚠️ No se encontró la puerta opuesta en la nueva sala.");
-                    }
-                }
-
-                // Mover la cámara al centro de la nueva sala
-                MoverCamaraAlCentro(salaConectada);
-
-                // Actualizar la sala actual
-                salaActual = nuevaSala;
+                sala.Value.SetActive(true); // Activar la sala inicial
+                Debug.Log($"🟢 Sala inicial activada: {sala.Key}");
             }
             else
             {
-                Debug.LogError($"❌ La sala en la posición {nuevaSala} es nula.");
+                sala.Value.SetActive(false); // Desactivar las demás salas
+                Debug.Log($"🔴 Sala desactivada: {sala.Key}");
             }
         }
-        else
+
+        // Configurar la sala inicial como la sala actual
+        salaActual = salaInicial;
+    }
+
+    public void MoverJugadorADireccion(ROOM_DIRECTIONS direccion)
+    {
+        StartCoroutine(CambiarDeSalaConPausa(direccion));
+    }
+    private IEnumerator CambiarDeSalaConPausa(ROOM_DIRECTIONS direccion)
+    {
+        if (instantiatedRooms == null || instantiatedRooms.Count == 0)
+        {
+            Debug.LogError("❌ No hay salas instanciadas.");
+            yield break;
+        }
+
+        Vector2Int nuevaSala = salaActual + DireccionARelativa(direccion);
+
+        if (!instantiatedRooms.ContainsKey(nuevaSala))
         {
             Debug.LogError($"❌ No se encontró la sala en la posición {nuevaSala}");
+            yield break;
         }
+
+        // Desactivar sala actual
+        if (instantiatedRooms.ContainsKey(salaActual) && instantiatedRooms[salaActual] != null)
+        {
+            instantiatedRooms[salaActual].SetActive(false);
+            Debug.Log($"🔴 Sala desactivada: {salaActual}");
+        }
+
+        GameObject salaConectada = instantiatedRooms[nuevaSala];
+        if (salaConectada == null)
+        {
+            Debug.LogError($"❌ La sala en la posición {nuevaSala} es nula.");
+            yield break;
+        }
+
+        salaConectada.SetActive(true);
+        Debug.Log($"🟢 Sala activada: {nuevaSala}");
+
+        if (player != null)
+        {
+            Transform puertaOpuesta = ObtenerPuertaOpuesta(salaConectada, direccion);
+            if (puertaOpuesta != null)
+            {
+                Vector3 posicionFrentePuerta = CalcularPosicionFrentePuerta(puertaOpuesta, direccion);
+                player.transform.position = posicionFrentePuerta;
+                Debug.Log($"🚶 Jugador movido a: {posicionFrentePuerta}");
+            }
+            else
+            {
+                Debug.LogWarning("⚠️ No se encontró la puerta opuesta en la nueva sala.");
+            }
+        }
+
+        MoverCamaraAlCentro(salaConectada);
+        salaActual = nuevaSala;
+
+        // 🔸 Pausa del juego durante 0.6 segundos de tiempo real
+        Time.timeScale = 0f;
+        yield return new WaitForSecondsRealtime(0.3f);
+        Time.timeScale = 1f;
     }
+
     private Vector3 CalcularPosicionFrentePuerta(Transform puerta, ROOM_DIRECTIONS entrada)
     {
         // Distancia para posicionar al jugador dentro de la sala conectada
@@ -155,20 +188,58 @@ public class DungeonManager : MonoBehaviour
 
     public bool SalaActualLimpia()
     {
-        // Verificar si la sala actual está limpia de enemigos
-        return enemigosRestantes == 0;
+        if (!instantiatedRooms.ContainsKey(salaActual))
+        {
+            Debug.LogWarning($"No se encontró una sala en la posición {salaActual}");
+            return true;
+        }
+
+        GameObject salaGO = instantiatedRooms[salaActual];
+        Transform suelo = salaGO.transform.Find("Suelo");
+
+        if (suelo == null)
+        {
+            Debug.LogWarning("No se encontró el objeto 'suelo' en la sala.");
+            return true;
+        }
+
+        int enemigosActivos = 0;
+
+        foreach (Transform spawnPoint in suelo)
+        {
+            foreach (Transform posibleEnemigo in spawnPoint)
+            {
+                if (posibleEnemigo.CompareTag("Enemigo") && posibleEnemigo.gameObject.activeSelf)
+                {
+                    enemigosActivos++;
+                    Debug.Log($"🛑 Enemigo activo: {posibleEnemigo.name}");
+                }
+            }
+        }
+
+        enemigosRestantes = enemigosActivos; // actualiza el contador con el número real
+
+        return enemigosActivos == 0;
+        
     }
+
 
     public void EliminarEnemigo()
     {
         // Reducir el número de enemigos restantes
         enemigosRestantes--;
+        Debug.Log($"Cheviene:{enemigosRestantes}");
 
         if (enemigosRestantes <= 0)
         {
             // Disparar el evento de sala limpia
             OnSalaLimpia?.Invoke();
+
+            Debug.Log($"No enemigos quedan");
         }
+        Debug.Log($"Enemigos:{enemigosRestantes}");
+
+
     }
 
     public void ConfigurarSalaActual(Vector2Int sala, int enemigos)
@@ -194,5 +265,36 @@ public class DungeonManager : MonoBehaviour
         {
             Debug.LogWarning("⚠️ No se encontró la cámara principal.");
         }
+    }
+
+    internal void GameOver()
+    {
+        Time.timeScale = 0f;
+
+        Debug.Log("Game Over");
+
+        // Mostrar el Canvas de Game Over
+        if (gameOverCanvas != null)
+        {
+            gameOverCanvas.SetActive(true); // Activar el Canvas de Game Over
+        }
+        player.transform.position = new Vector3(0, 0, 0); // Reiniciar la posición del jugador
+
+        
+
+
+    }
+
+    internal void Victoria()
+    {
+        Time.timeScale = 0f;
+        // Mostrar el Canvas de Game Over
+        if (victoryCanvas != null)
+        {
+            victoryCanvas.SetActive(true); // Activar el Canvas de Game Over
+        }
+        player.transform.position = new Vector3(0, 0, 0); // Reiniciar la posición del jugador
+
+
     }
 }

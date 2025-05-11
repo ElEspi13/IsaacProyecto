@@ -2,10 +2,9 @@ using UnityEngine;
 using UnityEngine.AI; // Importar IA de navegación
 using System.Collections;
 
-public class Enemigo : MonoBehaviour
+public class Enemigo : EnemigoBase
 {
     [Header("Estadísticas del Enemigo")]
-    public float vida = 50f;
     public float velocidad = 3.5f;
     private float velocidadOriginal;
 
@@ -51,15 +50,15 @@ public class Enemigo : MonoBehaviour
         // 🔄 Invertir sprite según dirección
         if (agente.velocity.x > 0.5)
         {
-            transform.localScale = new Vector3(4, 4, 4);
+            transform.localScale = new Vector3(3, 3, 4);
         }
         else if (agente.velocity.x < 0.5)
         {
-            transform.localScale = new Vector3(-4, 4, 4);
+            transform.localScale = new Vector3(-3, 3, 4);
         }
     }
 
-    public void RecibirDaño(float cantidad)
+    public override void RecibirDano(float cantidad)
     {
         vida -= cantidad;
         Debug.Log("Enemigo recibió daño: " + cantidad + ". Vida restante: " + vida);
@@ -87,10 +86,23 @@ public class Enemigo : MonoBehaviour
         agente.isStopped = false; // Reactivar movimiento
         enKnockback = false;
     }
-
-    private void Morir()
+    private void OnCollisionEnter2D(Collision2D other)
     {
-        Debug.Log("¡Enemigo eliminado!");
-        Destroy(gameObject);
+        if (other.gameObject.CompareTag("Player"))
+        {
+            EstadisticasJugador.instancia.PerderVida(0.5f);
+
+        }
     }
+
+    private void OnCollisionStay2D(Collision2D other)
+    {
+        if (other.gameObject.CompareTag("Player"))
+        {
+            EstadisticasJugador.instancia.PerderVida(0.5f);
+
+        }
+    }
+
+
 }
