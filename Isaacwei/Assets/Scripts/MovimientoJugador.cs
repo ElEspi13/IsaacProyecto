@@ -33,7 +33,7 @@ public class MovimientoJugador : MonoBehaviour
         direccionInput = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")).normalized;
 
         // Actualizar animaciones
-        ActualizarAnimaciones(direccionInput.x, direccionInput.y);
+        ActualizarAnimaciones(direccionInput);
     }
 
     void FixedUpdate()
@@ -42,10 +42,9 @@ public class MovimientoJugador : MonoBehaviour
         rb.linearVelocity = direccionInput * estadisticas.velocidad;
     }
 
-    void ActualizarAnimaciones(float x, float y)
+    void ActualizarAnimaciones(Vector2 input)
     {
-        animator.SetFloat("Horizontal", x);
-        animator.SetFloat("Vertical", y);
-        animator.SetBool("Moviendo", direccionInput.magnitude > 0);
+        animator.SetBool("IsRunning", input.magnitude > 0f);
     }
 }
+

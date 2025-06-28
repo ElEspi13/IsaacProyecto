@@ -46,19 +46,7 @@ public class EnemigoDisparador : EnemigoBase {
         // Si el jugador está dentro del rango de disparo
         if (distanciaAlJugador <= rangoDisparo)
         {
-            // Mirar hacia el jugador (solo rotación en el eje X)
-            Vector3 direccion = jugador.position - transform.position;
-
-            // Si el jugador está a la derecha del enemigo
-            if (direccion.x > 0)
-            {
-                transform.localScale = new Vector3((float)-0.4, (float)0.4, 4); // Míralo a la derecha
-            }
-            // Si el jugador está a la izquierda del enemigo
-            else
-            {
-                transform.localScale = new Vector3((float)-0.4, (float)0.4, 4); // Míralo a la izquierda
-            }
+            
 
             // Disparar si el temporizador lo permite
             temporizadorDisparo -= Time.deltaTime;

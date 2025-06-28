@@ -85,6 +85,7 @@ public class GeneradorMazmorra : MonoBehaviour
     void Start()
     {
         InicializarMazmorra();
+        Screen.SetResolution(1920, 1080, FullScreenMode.Windowed);
     }
 
     public void ReiniciarMazmorra(){
