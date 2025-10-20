@@ -1,1 +1,1 @@
-# Este Proyecto es un intento de recreacion de el sistema de juego de el juego The Binding of Isaac
+# Este Proyecto es una recreacion del estilo roguelike referenciado por the binding of isaac
